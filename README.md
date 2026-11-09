@@ -173,3 +173,20 @@ npm run test:coverage
 * `GET /api/v1/tasks/:id`: Busca de tarefa por ID.
 * `PUT /api/v1/tasks/:id`: Atualização de tarefa.
 * `DELETE /api/v1/tasks/:id`: Remoção de tarefa.
+## Acessos ao projeto
+
+- 🌐 [Aplicação TaskFlow](https://taskflow-devops-sdzi.onrender.com)
+- 📊 [Grafana Cloud](https://narrowwscone1195.grafana.net)
+- 📈 Prometheus — monitoramento de métricas
+- 💻 [Código-fonte no GitHub](https://github.com/IgorFreitasf/taskflow-devops)
+
+## Tecnologias utilizadas
+
+- Node.js
+- Express
+- PostgreSQL
+- Docker
+- GitHub Actions
+- Prometheus
+- Grafana
+- Render
