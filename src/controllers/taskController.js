@@ -1,4 +1,5 @@
 const taskService = require('../services/taskService');
+const metricsService = require('../services/metricsService');
 
 class TaskController {
   async create(req, res, next) {
@@ -12,6 +13,12 @@ class TaskController {
         status,
         dueDate
       });
+
+      // Incrementa a métrica somente depois que a tarefa foi salva com sucesso.
+      metricsService.tasksCreatedCounter.inc({
+        priority: task.priority || priority || 'unknown'
+      });
+
       return res.status(201).json({
         success: true,
         message: 'Tarefa criada com sucesso.',
