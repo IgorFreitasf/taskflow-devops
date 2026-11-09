@@ -19,10 +19,18 @@ A aplicação TaskFlow está publicada e pode ser acessada diretamente pelo nave
 
 | Recurso | Link |
 |---|---|
-| 🚀 Aplicação online | https://taskflow-devops-sdzi.onrender.com |
-| 💻 Repositório GitHub | https://github.com/IgorFreitasf/taskflow-devops |
-| ❤️ Health Check | https://taskflow-devops-sdzi.onrender.com/health |
-| 📊 Métricas Prometheus | https://taskflow-devops-sdzi.onrender.com/metrics |
+| 🚀 Aplicação TaskFlow online | [Abrir aplicação](https://taskflow-devops-sdzi.onrender.com) |
+| 💻 Repositório GitHub | [Ver código-fonte](https://github.com/IgorFreitasf/taskflow-devops) |
+| 📊 Grafana Cloud — Dashboards | [Abrir monitoramento](https://narrowscone1195.grafana.net/) |
+| ☁️ Render — Serviço publicado | [Abrir painel do serviço](https://dashboard.render.com/web/srv-dbot89lg1s2s7389549g) |
+
+### Links técnicos
+
+| Recurso | Link |
+|---|---|
+| ❤️ Health Check | [ /health ](https://taskflow-devops-sdzi.onrender.com/health) |
+| 📈 Métricas Prometheus | [ /metrics ](https://taskflow-devops-sdzi.onrender.com/metrics) |
+| 🗄️ Banco PostgreSQL no Render | [Painel do banco](https://dashboard.render.com/d/dpg-dbot17ff3r2c73c80vmg-a) |
 
 ### Como acessar
 
@@ -65,7 +73,7 @@ flowchart TD
     Browser -->|HTTP GET /| Frontend
     Browser -->|API Calls /api/v1| Router
     ServiceLayer -->|Pool de Conexões pg| PostgresDB
-    PrometheusServer -->|Scrape a cada 15s em /metrics| MetricsModule
+    PrometheusServer -->|Scrape das métricas em /metrics| MetricsModule
     GrafanaDashboard -->|Consulta PromQL| PrometheusServer
 ```
 
@@ -192,20 +200,3 @@ npm run test:coverage
 * `GET /api/v1/tasks/:id`: Busca de tarefa por ID.
 * `PUT /api/v1/tasks/:id`: Atualização de tarefa.
 * `DELETE /api/v1/tasks/:id`: Remoção de tarefa.
-## Acessos ao projeto
-
-- 🌐 [Aplicação TaskFlow](https://taskflow-devops-sdzi.onrender.com)
-- 📊 [Grafana Cloud](https://narrowwscone1195.grafana.net)
-- 📈 Prometheus — monitoramento de métricas
-- 💻 [Código-fonte no GitHub](https://github.com/IgorFreitasf/taskflow-devops)
-
-## Tecnologias utilizadas
-
-- Node.js
-- Express
-- PostgreSQL
-- Docker
-- GitHub Actions
-- Prometheus
-- Grafana
-- Render
