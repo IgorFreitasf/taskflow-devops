@@ -1,12 +1,10 @@
 const taskService = require('../services/taskService');
-const metricsService = require('../services/metricsService');
 
 class TaskController {
   async create(req, res, next) {
     try {
       const userId = req.user.id;
       const { title, description, priority, status, dueDate } = req.body;
-
       const task = await taskService.createTask(userId, {
         title,
         description,
@@ -14,12 +12,6 @@ class TaskController {
         status,
         dueDate
       });
-
-      // Registra a criação bem-sucedida da tarefa no Prometheus
-      metricsService.tasksCreatedCounter.inc({
-        priority: task.priority || priority || 'unknown'
-      });
-
       return res.status(201).json({
         success: true,
         message: 'Tarefa criada com sucesso.',
@@ -34,12 +26,7 @@ class TaskController {
     try {
       const userId = req.user.id;
       const { status, priority } = req.query;
-
-      const tasks = await taskService.listTasks(userId, {
-        status,
-        priority
-      });
-
+      const tasks = await taskService.listTasks(userId, { status, priority });
       return res.status(200).json({
         success: true,
         count: tasks.length,
@@ -54,9 +41,7 @@ class TaskController {
     try {
       const userId = req.user.id;
       const taskId = parseInt(req.params.id, 10);
-
       const task = await taskService.getTaskById(taskId, userId);
-
       return res.status(200).json({
         success: true,
         data: task
@@ -71,7 +56,6 @@ class TaskController {
       const userId = req.user.id;
       const taskId = parseInt(req.params.id, 10);
       const { title, description, priority, status, dueDate } = req.body;
-
       const updated = await taskService.updateTask(taskId, userId, {
         title,
         description,
@@ -79,7 +63,6 @@ class TaskController {
         status,
         dueDate
       });
-
       return res.status(200).json({
         success: true,
         message: 'Tarefa atualizada com sucesso.',
@@ -94,9 +77,7 @@ class TaskController {
     try {
       const userId = req.user.id;
       const taskId = parseInt(req.params.id, 10);
-
       await taskService.deleteTask(taskId, userId);
-
       return res.status(204).send();
     } catch (error) {
       next(error);
