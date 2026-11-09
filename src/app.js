@@ -8,6 +8,7 @@ const systemController = require('./controllers/systemController');
 
 const authMiddleware = require('./middlewares/authMiddleware');
 const metricsMiddleware = require('./middlewares/metricsMiddleware');
+const metricsAuthMiddleware = require('./middlewares/metricsAuthMiddleware');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
 const app = express();
@@ -32,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Rotas de Operações e Monitoramento
 app.get('/health', (req, res) => systemController.health(req, res));
-app.get('/metrics', (req, res) => systemController.metrics(req, res));
+app.get('/metrics', metricsAuthMiddleware, (req, res) => systemController.metrics(req, res));
 
 // Rotas de Autenticação
 const authRouter = express.Router();
