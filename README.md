@@ -13,6 +13,25 @@ Sistema web completo desenvolvido para simular o ecossistema de engenharia de so
 
 ---
 
+## 🌐 Acesso ao Projeto
+
+A aplicação TaskFlow está publicada e pode ser acessada diretamente pelo navegador, sem necessidade de instalação.
+
+| Recurso | Link |
+|---|---|
+| 🚀 Aplicação online | https://taskflow-devops-sdzi.onrender.com |
+| 💻 Repositório GitHub | https://github.com/IgorFreitasf/taskflow-devops |
+| ❤️ Health Check | https://taskflow-devops-sdzi.onrender.com/health |
+| 📊 Métricas Prometheus | https://taskflow-devops-sdzi.onrender.com/metrics |
+
+### Como acessar
+
+1. Acesse o link da aplicação online.
+2. Crie uma conta ou entre com suas credenciais.
+3. Comece a cadastrar e gerenciar suas tarefas.
+
+**Tecnologias utilizadas:** Node.js, Express, PostgreSQL, Docker, GitHub Actions, Prometheus e Grafana.
+
 ## 🏛️ 1. Arquitetura do Sistema e Topologia
 
 ```mermaid
