@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow — Gestão de Tarefas DevOps</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-['Inter'] antialiased">
+  
+  <!-- Barra de Notificação Superior (Health Check) -->
+  <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-500/30">
+          TF
+        </div>
+        <span class="text-xl font-bold tracking-tight text-white">TaskFlow <span class="text-indigo-400 text-xs font-semibold px-2 py-0.5 rounded bg-indigo-950 border border-indigo-800 ml-1">DevOps MVP</span></span>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <!-- Indicador de Health Check em Tempo Real -->
+        <div id="healthBadge" class="hidden sm:flex items-center space-x-2 text-xs bg-emerald-950/80 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="healthText">API: UP (0ms)</span>
+        </div>
+
+        <!-- Sessão do Usuário Autenticado -->
+        <div id="userSection" class="hidden flex items-center space-x-3">
+          <span id="userNameDisplay" class="text-sm font-medium text-slate-300"></span>
+          <button id="logoutBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition">
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="max-w-6xl mx-auto px-4 py-8">
+    
+    <!-- TELA DE AUTENTICAÇÃO (LOGIN / REGISTRO) -->
+    <section id="authSection" class="max-w-md mx-auto my-12 bg-slate-800/80 p-8 rounded-2xl border border-slate-700/60 shadow-2xl backdrop-blur">
+      <div class="flex border-b border-slate-700 mb-6">
+        <button id="tabLogin" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400">Entrar</button>
+        <button id="tabRegister" class="flex-1 pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200">Criar Conta</button>
+      </div>
+
+      <!-- Formulário de Login -->
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">E-mail</label>
+          <input type="email" id="loginEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" placeholder="dev@startup.com">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Senha</label>
+          <input type="password" id="loginPassword" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" placeholder="••••••••">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg text-sm transition shadow-lg shadow-indigo-600/30">
+          Acessar Sistema
+        </button>
+      </form>
+
+      <!-- Formulário de Cadastro -->
+      <form id="registerForm" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Nome Completo</label>
+          <input type="text" id="regName" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" placeholder="Maria Dev">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">E-mail</label>
+          <input type="email" id="regEmail" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" placeholder="maria@startup.com">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Senha (Mínimo 6 caracteres)</label>
+          <input type="password" id="regPassword" minlength="6" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 transition" placeholder="••••••••">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-lg text-sm transition shadow-lg shadow-emerald-600/30">
+          Registrar e Entrar
+        </button>
+      </form>
+
+      <div id="authAlert" class="mt-4 hidden p-3 rounded-lg text-xs"></div>
+    </section>
+
+    <!-- DASHBOARD DE TAREFAS (VISÍVEL APÓS AUTENTICAÇÃO) -->
+    <section id="dashboardSection" class="hidden space-y-6">
+      
+      <!-- Cards de Métricas da Aplicação -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+          <p class="text-xs text-slate-400 font-medium">Total de Tarefas</p>
+          <p id="statTotal" class="text-2xl font-bold text-white mt-1">0</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+          <p class="text-xs text-amber-400 font-medium">Pendentes</p>
+          <p id="statPending" class="text-2xl font-bold text-amber-400 mt-1">0</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+          <p class="text-xs text-sky-400 font-medium">Em Andamento</p>
+          <p id="statInProgress" class="text-2xl font-bold text-sky-400 mt-1">0</p>
+        </div>
+        <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+          <p class="text-xs text-emerald-400 font-medium">Concluídas</p>
+          <p id="statCompleted" class="text-2xl font-bold text-emerald-400 mt-1">0</p>
+        </div>
+      </div>
+
+      <!-- Barra de Ações e Filtros -->
+      <div class="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-wrap gap-3 items-center justify-between">
+        <div class="flex flex-wrap items-center gap-3">
+          <select id="filterStatus" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+            <option value="">Todos os Status</option>
+            <option value="PENDENTE">Pendente</option>
+            <option value="EM_ANDAMENTO">Em Andamento</option>
+            <option value="CONCLUIDA">Concluída</option>
+          </select>
+          <select id="filterPriority" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+            <option value="">Todas as Prioridades</option>
+            <option value="ALTA">Alta</option>
+            <option value="MEDIA">Média</option>
+            <option value="BAIXA">Baixa</option>
+          </select>
+        </div>
+
+        <button id="openNewTaskBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-xs flex items-center space-x-1.5 transition shadow-lg shadow-indigo-600/30">
+          <span>+ Nova Tarefa</span>
+        </button>
+      </div>
+
+      <!-- Lista de Tarefas -->
+      <div id="tasksList" class="grid gap-3">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+      <div id="emptyTasks" class="hidden text-center py-12 text-slate-500 text-sm">
+        Nenhuma tarefa encontrada. Crie sua primeira tarefa acima!
+      </div>
+    </section>
+
+    <!-- MODAL DE CRIAÇÃO / EDIÇÃO DE TAREFA -->
+    <div id="taskModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+          <h3 id="modalTitle" class="text-base font-semibold text-white">Nova Tarefa</h3>
+          <button id="closeModalBtn" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+
+        <form id="taskForm" class="space-y-3">
+          <input type="hidden" id="taskId">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Título *</label>
+            <input type="text" id="taskTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Descrição</label>
+            <textarea id="taskDesc" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Prioridade</label>
+              <select id="taskPriority" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="BAIXA">Baixa</option>
+                <option value="MEDIA" selected>Média</option>
+                <option value="ALTA">Alta</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1">Status</label>
+              <select id="taskStatus" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="PENDENTE">Pendente</option>
+                <option value="EM_ANDAMENTO">Em Andamento</option>
+                <option value="CONCLUIDA">Concluída</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Prazo (Due Date)</label>
+            <input type="date" id="taskDueDate" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+
+          <div class="flex justify-end space-x-2 pt-3 border-t border-slate-700">
+            <button type="button" id="cancelModalBtn" class="px-4 py-2 text-xs rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition">Cancelar</button>
+            <button type="submit" class="px-4 py-2 text-xs rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition">Salvar Tarefa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast de Notificações -->
+  <div id="toast" class="fixed bottom-4 right-4 hidden px-4 py-3 rounded-xl text-xs font-medium shadow-2xl z-50 transition-all"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

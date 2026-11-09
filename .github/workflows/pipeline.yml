@@ -1,0 +1,119 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # ===================================================
+  # 1. Integração Contínua (CI)
+  # ===================================================
+  build-and-test:
+    name: Lint, Testes e Cobertura
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: taskflow_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Setup do Ambiente Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalação de Dependências
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Validação Estática com ESLint
+        run: npm run lint
+
+      - name: Execução dos Testes com Cobertura Mínima (>= 70%)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres_password@localhost:5432/taskflow_test
+          JWT_SECRET: ci_pipeline_jwt_secret_valid_key_1234
+          NODE_ENV: test
+        run: npm run test:coverage
+
+      - name: Upload do Relatório de Cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ===================================================
+  # 2. Entrega Contínua (CD) - Condicionada ao Sucesso do CI
+  # ===================================================
+  deploy-production:
+    name: Deploy em Produção & Smoke Test
+    needs: [build-and-test] # Só executa se o CI passar
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      APP_URL: ${{ secrets.PRODUCTION_APP_URL }}
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Disparo do Deploy Automatizado (Render Deploy Hook)
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL não configurado: NENHUM deploy foi feito (pipeline verde sem deploy)."
+            exit 0
+          fi
+          echo "Disparando deploy contínuo em produção..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$DEPLOY_HOOK_URL")
+          if [ "$HTTP_STATUS" -ne 200 ] && [ "$HTTP_STATUS" -ne 201 ]; then
+            echo "Falha ao acionar o Deploy Hook. HTTP Status: $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Deploy Hook aceito com sucesso (HTTP $HTTP_STATUS)."
+
+      - name: Aguardar Propagação do Container (45s)
+        if: env.DEPLOY_HOOK_URL != ''
+        run: sleep 45
+
+      - name: Smoke Test Pós-Deploy no Endpoint /health
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "::warning::PRODUCTION_APP_URL não configurado: smoke test NÃO executado."
+            exit 0
+          fi
+          echo "Iniciando verificação de integridade pós-deploy em $APP_URL/health..."
+          for i in {1..5}; do
+            RESPONSE=$(curl -s -f "$APP_URL/health" || echo "FALHA")
+            if echo "$RESPONSE" | grep -q '"status":"UP"'; then
+              echo "Smoke Test Aprovado! Payload recebido: $RESPONSE"
+              exit 0
+            fi
+            echo "Tentativa $i falhou. Aguardando 10 segundos..."
+            sleep 10
+          done
+          echo "Smoke Test Falhou: a aplicação não respondeu UP dentro do tempo limite."
+          exit 1
